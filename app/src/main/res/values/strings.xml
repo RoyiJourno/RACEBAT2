@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">RaceBet</string>
+    <string name="base_url">http://127.0.0.1:5000/</string>
+</resources>

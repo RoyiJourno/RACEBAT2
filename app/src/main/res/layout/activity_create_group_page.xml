@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".CreateGroupPage">
+
+    <Button
+        android:id="@+id/btnCreateGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="49dp"
+        android:text="create"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <EditText
+        android:id="@+id/txtGroupName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="177dp"
+        android:ems="10"
+        android:hint="Group Name"
+        android:inputType="textPersonName"
+        app:layout_constraintEnd_toEndOf="@+id/txtPhoneNumber"
+        app:layout_constraintStart_toStartOf="@+id/txtPhoneNumber"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/txtBetAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="35dp"
+        android:ems="10"
+        android:hint="Bet Amount"
+        android:inputType="textPersonName"
+        app:layout_constraintStart_toStartOf="@+id/txtGroupName"
+        app:layout_constraintTop_toBottomOf="@+id/txtGroupName" />
+
+    <EditText
+        android:id="@+id/txtDuration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:ems="10"
+        android:hint="Duration"
+        android:inputType="textPersonName"
+        app:layout_constraintStart_toStartOf="@+id/txtBetAmount"
+        app:layout_constraintTop_toBottomOf="@+id/txtBetAmount" />
+
+    <EditText
+        android:id="@+id/txtMaxUser"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:ems="10"
+        android:hint="Max Users"
+        android:inputType="textPersonName"
+        app:layout_constraintStart_toStartOf="@+id/txtDuration"
+        app:layout_constraintTop_toBottomOf="@+id/txtDuration" />
+
+    <Button
+        android:id="@+id/btnAddFriend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="47dp"
+        android:layout_marginEnd="16dp"
+        android:text="add friend"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txtMaxUser" />
+
+    <EditText
+        android:id="@+id/txtPhoneNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="14dp"
+        android:ems="10"
+        android:hint="Phone Number"
+        android:inputType="textPersonName"
+        app:layout_constraintBaseline_toBaselineOf="@+id/btnAddFriend"
+        app:layout_constraintEnd_toStartOf="@+id/btnAddFriend" />
+
+</android.support.constraint.ConstraintLayout>

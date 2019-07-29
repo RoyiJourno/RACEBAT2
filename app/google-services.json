@@ -1,0 +1,56 @@
+{
+  "project_info": {
+    "project_number": "917718442327",
+    "firebase_url": "https://racebet-dd68e.firebaseio.com",
+    "project_id": "racebet-dd68e",
+    "storage_bucket": "racebet-dd68e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:917718442327:android:96497fcc3327e482",
+        "android_client_info": {
+          "package_name": "com.example.royi.racebet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "917718442327-qh1rtsvlaia99aht65p12rom4a1mp90b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.royi.racebet",
+            "certificate_hash": "c04823e9304898af9a47f749fbf6be797a3b4479"
+          }
+        },
+        {
+          "client_id": "917718442327-7rkecjbim8q06ev2cqmkmbluc4fvmod8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.royi.racebet",
+            "certificate_hash": "cb51c8f006e0dc7e37623bfe15d7ff1a34f9e16a"
+          }
+        },
+        {
+          "client_id": "917718442327-lg7dsk0b6lnpr2cl5ugkckmko68nroan.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzQ_AaBVFbaxeX3pgkNH70U_6e78H5Drk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "917718442327-lg7dsk0b6lnpr2cl5ugkckmko68nroan.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
