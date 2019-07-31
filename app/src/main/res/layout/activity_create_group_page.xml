@@ -61,25 +61,5 @@
         app:layout_constraintStart_toStartOf="@+id/txtDuration"
         app:layout_constraintTop_toBottomOf="@+id/txtDuration" />
 
-    <Button
-        android:id="@+id/btnAddFriend"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="47dp"
-        android:layout_marginEnd="16dp"
-        android:text="add friend"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/txtMaxUser" />
-
-    <EditText
-        android:id="@+id/txtPhoneNumber"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="14dp"
-        android:ems="10"
-        android:hint="Phone Number"
-        android:inputType="textPersonName"
-        app:layout_constraintBaseline_toBaselineOf="@+id/btnAddFriend"
-        app:layout_constraintEnd_toStartOf="@+id/btnAddFriend" />
 
 </android.support.constraint.ConstraintLayout>

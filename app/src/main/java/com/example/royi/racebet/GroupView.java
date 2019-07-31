@@ -1,14 +1,21 @@
 package com.example.royi.racebet;
 
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -28,6 +35,7 @@ import com.google.firebase.database.ValueEventListener;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -51,6 +59,7 @@ public class GroupView extends AppCompatActivity {
     private Group group;
     private User user;
     private JSONArray arrayUsers;
+    private Button btnAddFriend;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,17 +69,27 @@ public class GroupView extends AppCompatActivity {
         groupBetPrice = findViewById(R.id.betPriceText);
         groupDuration = findViewById(R.id.durationGroupText);
         groupName = findViewById(R.id.groupNameText);
+        btnAddFriend = findViewById(R.id.btnAddUsers);
 
         group = getIntent().getParcelableExtra("group");
         user = getIntent().getParcelableExtra("user");
 
         groupName.setText("Group Name\n"+group.getName());
         groupDuration.setText("End Time\n"+group.getDurtion());
-        groupName.setText("Bet Price\n"+group.getBetPrice());
+        groupBetPrice.setText("Bet Price\n"+group.getBetPrice());
 
         initListGroup();
 
 
+        if(!user.getUuid().equals(group.getAdminID()))
+            btnAddFriend.setVisibility(View.INVISIBLE);
+
+        btnAddFriend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showChangeLangDialog();
+            }
+        });
 
        /* myRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -104,8 +123,96 @@ public class GroupView extends AppCompatActivity {
 
     }
 
+    public void showChangeLangDialog() {
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        final View dialogView = inflater.inflate(R.layout.custom_dialog, null);
+        dialogBuilder.setView(dialogView);
+
+        final EditText edt = (EditText) dialogView.findViewById(R.id.edit1);
+
+        dialogBuilder.setTitle("Send Invitation");
+        dialogBuilder.setMessage("Enter phone number");
+        dialogBuilder.setPositiveButton("Send", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                //do something with edt.getText().toString();
+                if(edt.length()!=10){
+                    Toast.makeText(getApplicationContext(),"Phone incorrect try again",Toast.LENGTH_LONG).show();
+                }
+                else{
+                    StringRequest stringRequest = new StringRequest(Request.Method.POST, Config.SERVERPATH + "userphone",
+                            new Response.Listener<String>() {
+                                @Override
+                                public void onResponse(String response) {
+                                    //Toast.makeText(CreateGroupPage.this,response,Toast.LENGTH_LONG).show();
+                                    try{
+                                        PackageManager packageManager = getPackageManager();
+                                        Intent i = new Intent(Intent.ACTION_VIEW);
+
+                                        try {
+                                            String url = "https://api.whatsapp.com/send?phone=972"+ edt.getText().toString() +"&text=" + URLEncoder.encode("You have new invitation to join my group.\ngo to RaceBet App to confirm", "UTF-8");
+                                            i.setPackage("com.whatsapp");
+                                            i.setData(Uri.parse(url));
+                                            if (i.resolveActivity(packageManager) != null) {
+                                                startActivity(i);
+                                            }
+                                        } catch (Exception e){
+                                            e.printStackTrace();
+                                        }
+                                        //Toast.makeText(getApplicationContext(),"Invitation Send Successfully!",Toast.LENGTH_LONG).show();
+                                    }catch (Exception e){
+                                        Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_LONG).show();
+                                    }
+
+                                }
+                            },
+                            new Response.ErrorListener() {
+                                @Override
+                                public void onErrorResponse(VolleyError error) {
+                                    //error.networkResponse.statusCode
+                                    //Toast.makeText(getApplicationContext(),error.toString(),Toast.LENGTH_LONG).show();
+                                    if(error.networkResponse.statusCode == 401)
+                                        Toast.makeText(getApplicationContext(),"User already in this group",Toast.LENGTH_LONG).show();
+                                    else if(error.networkResponse.statusCode == 400)
+                                        Toast.makeText(getApplicationContext(),"You already send invitation to this user",Toast.LENGTH_LONG).show();
+                                }
+                            }){/*
+            @Override
+            protected Map<String,String> getParams(){
+                Map<String,String> params = new HashMap<String, String>();
+                params.put("gid",group.getGruopID());
+                params.put("id",user.getUuid());
+                params.put("token",user.getToken());
+
+                return params;
+            }*/
+                        @Override
+                        public Map<String, String> getParams() {
+                            Map<String,String> params = new HashMap<String, String>();
+                            params.put("id",user.getUuid());
+                            params.put("token",user.getToken());
+                            params.put("gid",group.getGruopID());
+                            params.put("phone",edt.getText().toString());
+                            return params;
+                        }
+
+                    };
+
+                    AppController.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);
+                }
+            }
+        });
+        dialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                //pass
+            }
+        });
+        AlertDialog b = dialogBuilder.create();
+        b.show();
+    }
+
     private void initListGroup() {
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, "http://rcbetapi.ddns.net/usersingroup",
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, Config.SERVERPATH + "usersingroup",
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {

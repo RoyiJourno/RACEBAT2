@@ -1,19 +1,29 @@
 package com.example.royi.racebet;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.JsonReader;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Toast;
+
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -22,17 +32,30 @@ import com.android.volley.toolbox.StringRequest;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.fitness.data.Bucket;
+import com.google.android.gms.fitness.data.DataPoint;
+import com.google.android.gms.fitness.data.DataSet;
+import com.google.android.gms.fitness.data.Field;
+import com.google.android.gms.fitness.request.DataReadRequest;
+import com.google.android.gms.fitness.result.DataReadResult;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.net.URLDecoder;
+import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -40,18 +63,21 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Subscription;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import static android.accounts.AccountManager.KEY_PASSWORD;
 import static android.accounts.AccountManager.get;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener,
+GoogleApiClient.ConnectionCallbacks,GoogleApiClient.OnConnectionFailedListener{
     public static final String TAG = "BasicRecordingApi";
     private static final int REQUEST_OAUTH_REQUEST_CODE = 1;
     private static final int RC_SIGN_IN = 1001;//code for google sign in
@@ -60,27 +86,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     User user;
     private GoogleSignInClient mGoogleSignInClient;
     //check
+    private GoogleApiClient googleApiClient;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        FitnessOptions fitnessOptions =
-                FitnessOptions.builder().addDataType(DataType.TYPE_ACTIVITY_SAMPLES).build();
-
-        // Check if the user has permissions to talk to Fitness APIs, otherwise authenticate the
-        // user and request required permissions.
-        if (!GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(this), fitnessOptions)) {
-            GoogleSignIn.requestPermissions(
-                    this,
-                    REQUEST_OAUTH_REQUEST_CODE,
-                    GoogleSignIn.getLastSignedInAccount(this),
-                    fitnessOptions);
-        } else {
-            subscribe();
-        }
 
         jumpIfRegisterd(); //if the user already sign-in.
+
+        googleApiClient = new GoogleApiClient.Builder(getApplicationContext())
+                .addApi(Fitness.HISTORY_API)
+                .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
+                .addConnectionCallbacks(this)
+                .enableAutoManage(this,0,this)
+                .build();
+        MyWorker.googleApiClient = googleApiClient;
+        if(GoogleSignIn.getLastSignedInAccount(getApplicationContext())!=null)
+        Fitness.getRecordingClient(getApplicationContext(), GoogleSignIn.getLastSignedInAccount(getApplicationContext()))
+                .subscribe(DataType.TYPE_ACTIVITY_SAMPLES)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.i(TAG, "Successfully subscribed!");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.i(TAG, "There was a problem subscribing.");
+                    }
+                });
+
 
         //google signin
         // Configure sign-in to request the user's ID, email address, and basic
@@ -108,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         userAuth = FirebaseAuth.getInstance();
 
+
     }
 
     /*
@@ -128,64 +167,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(new Intent(this,MainLandingPage.class));
             finish();
         }
-    }
-
-
-
-    /**
-     * Subscribes to an available {@link DataType}. Subscriptions can exist across application
-     * instances (so data is recorded even after the application closes down).  When creating
-     * a new subscription, it may already exist from a previous invocation of this app.  If
-     * the subscription already exists, the method is a no-op.  However, you can check this with
-     * a special success code.
-     */
-    public void subscribe() {
-        // To create a subscription, invoke the Recording API. As soon as the subscription is
-        // active, fitness data will start recording.
-        // [START subscribe_to_datatype]
-        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
-                .subscribe(DataType.TYPE_ACTIVITY_SAMPLES)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.i(TAG, "Successfully subscribed!");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.i(TAG, "There was a problem subscribing.");
-                    }
-                });
-        // [END subscribe_to_datatype]
-    }
-
-    /**
-     * Cancels the ACTIVITY_SAMPLE subscription by calling unsubscribe on that {@link DataType}.
-     */
-    private void cancelSubscription() {
-        final String dataTypeStr = DataType.TYPE_ACTIVITY_SAMPLES.toString();
-
-        // Invoke the Recording API to unsubscribe from the data type and specify a callback that
-        // will check the result.
-        // [START unsubscribe_from_datatype]
-        Fitness.getRecordingClient(this, GoogleSignIn.getLastSignedInAccount(this))
-                .unsubscribe(DataType.TYPE_ACTIVITY_SAMPLES);
-        // [END unsubscribe_from_datatype]
-    }
-
-    public int getStepsFromCertainDate(Date date){
-
-        Calendar cal = Calendar.getInstance();
-        Date now = new Date();
-        cal.setTime(now);
-        long endTime = cal.getTimeInMillis();
-        cal.setTime(date);
-        long startTime = cal.getTimeInMillis();
-        //TODO : DataReadRequest readRequest
-        return 0;
+        //start worker
 
     }
+
+
 
     @Override
     public void onClick(View view) {
@@ -210,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == REQUEST_OAUTH_REQUEST_CODE) {
-                subscribe();
+                //subscribe();
             }
         }
         // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
@@ -227,18 +213,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             final GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             final String token = account.getIdToken();
             final String uniqueId = UUID.randomUUID().toString().replace("-","");
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://rcbetapi.ddns.net/user",
+            StringRequest stringRequest = new StringRequest(Request.Method.POST, Config.SERVERPATH + "user",
                     new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
                             //Toast.makeText(MainActivity.this,response,Toast.LENGTH_LONG).show();
                             try{
-                                JSONObject jsonObject = new JSONObject(response);
+                                JSONObject jsonObject1 = new JSONObject(response);
+                                JSONObject jsonObject = jsonObject1.getJSONObject("uinfo");
+                                JSONArray jsonArray = jsonObject1.getJSONArray("inv_list");
                                 user = new User(token,jsonObject.getString("id"),
                                         URLDecoder.decode(jsonObject.getString("name"),"UTF-8")
                                         ,jsonObject.getString("phone"),
                                         jsonObject.getString("ppath"),null);
-                                goToMainLandingPage();
+                                goToMainLandingPage(jsonArray,account.getEmail());
                             }catch (Exception e){
                                 Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_LONG).show();
                             }
@@ -278,9 +266,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void goToMainLandingPage() {
+    private void goToMainLandingPage(JSONArray jsonArray,String email) {
         Intent intent = new Intent(this,MainLandingPage.class);
         intent.putExtra("user",user);
+        intent.putExtra("userEmail",email);
         startActivity(intent);
     }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+
+
 }

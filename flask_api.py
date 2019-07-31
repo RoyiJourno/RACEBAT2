@@ -33,12 +33,21 @@ def payment_serializer(payment):
 
 
 def auth_user(jwt):
+<<<<<<< HEAD
+    res, cont = h.request('https://www.googleapis.com/oauth2/v1/tokeninfo?id_token=' + jwt, method="GET",
+                          headers={'accept': 'application/json'})
+    # The below endpoint will return JSON formatted =>>>
+    # =>>>id_token claims (such as email) after succesfull validation
+
+    return {} if res.status != 200 else cont
+=======
     req = h.request('https://www.googleapis.com/oauth2/v1/tokeninfo?id_token=' + jwt, method="GET",
                     headers={'accept': 'application/json'})
     # The below endpoint will return JSON formatted =>>>
     # =>>>id_token claims (such as email) after succesfull validation
 
     return json.loads(req[1])
+>>>>>>> יאלה לסים
 
 
 engine = create_engine("mysql+mysqlconnector://race:race@127.0.0.1/raceback")
@@ -51,9 +60,15 @@ Base = automap_base()
 Base.prepare(engine, reflect=True)
 
 # Class assignment to var
+<<<<<<< HEAD
+Users = Base.classes.Users
+Groups = Base.classes.Groups
+Payments = Base.classes.Payments
+=======
 Users = Base.classes.users
 Groups = Base.classes.groups
 Payments = Base.classes.payments
+>>>>>>> יאלה לסים
 Users_Groups = Base.classes.usergroup
 
 app = flask.Flask(__name__)
@@ -68,6 +83,16 @@ app = flask.Flask(__name__)
 
 @app.route('/group', methods=['POST', 'PUT', 'GET'])
 def group():
+<<<<<<< HEAD
+    for item in request.form:
+        if request.form[item] is None:
+            return 400
+    try:
+        # UUID(request.form['id'], version=4)
+        try:
+            auth = auth_user(request.form['token'])
+            if auth.__len__() == 0 or Users.query.filter(Users.mail == auth['email']).id != request.form['admin_id']:
+=======
     if request.form['id'] is None:
         return "Invalid id", 400
     try:
@@ -76,6 +101,7 @@ def group():
             auth = auth_user(request.form['token'])
             if auth.__len__() == 0 or Users.query.filter(Users.mail == json.loads(auth).email).id != request.form[
                 'admin_id']:
+>>>>>>> יאלה לסים
                 return 'No permissions', 401
         except NoResultFound:
             return 'No permissions', 401
@@ -111,14 +137,34 @@ def group():
         return "Bad request", 400
     except ValueError:
         return "Invalid id", 400
+<<<<<<< HEAD
+    except TypeError:
+        return "Invalid id", 400
+=======
+>>>>>>> יאלה לסים
 
 
 @app.route('/user', methods=['POST', 'PUT', 'GET'])
 def user():
+    for item in request.form:
+        if request.form[item] is None:
+            return 400
     try:
         try:
             print(request.form['token'])
             auth = auth_user(request.form['token'])
+<<<<<<< HEAD
+            if request.method != 'POST':
+                # TODO: AUTH IS NOT A LIST
+                if auth.__len__() == 0 or Users.query.filter(Users.id == auth['email']).count() == 0:
+                    return 'No permissions', 401
+            else:
+                if auth['email'] != request.form['email']:
+                    return 'No permissions', 401
+                if Users.query.filter(Users.id == request.form['email']).count() > 0:
+                    return 409
+
+=======
             print(auth)
             if request.method != 'POST':
                 # TODO: AUTH IS NOT A LIST
@@ -127,6 +173,7 @@ def user():
             else:
                 if list(auth.keys()).__len__() == 0:
                     return 'No permissions', 401
+>>>>>>> יאלה לסים
         except NoResultFound:
             return 'No permissions', 401
         if request.method == 'POST':
@@ -175,7 +222,11 @@ def usertogroup():
     try:
         try:
             auth = auth_user(request.form['token'])
+<<<<<<< HEAD
+            if auth._len_() == 0 or Users.query.filter(Users.mail == json.loads(auth).email).id != request.form['id']:
+=======
             if auth.len() == 0 or Users.query.filter(Users.mail == json.loads(auth).email).id != request.form['id']:
+>>>>>>> יאלה לסים
                 return 'No permissions', 401
         except NoResultFound:
             return 'No permissions', 401
@@ -207,7 +258,11 @@ def grouptousers():
     try:
         try:
             auth = auth_user(request.form['token'])
+<<<<<<< HEAD
+            if auth._len_() == 0 or Users.query.filter(Users.mail == json.loads(auth).email).id != request.form['id']:
+=======
             if auth.len() == 0 or Users.query.filter(Users.mail == json.loads(auth).email).id != request.form['id']:
+>>>>>>> יאלה לסים
                 return 'No permissions', 401
         except NoResultFound:
             return 'No permissions', 401
@@ -226,7 +281,11 @@ def payments():
     try:
         try:
             auth = auth_user(request.form['token'])
+<<<<<<< HEAD
+            if auth._len_() == 0 or Users.query.filter(Users.mail == json.loads(auth).email).id != request.form['id']:
+=======
             if auth.len() == 0 or Users.query.filter(Users.mail == json.loads(auth).email).id != request.form['id']:
+>>>>>>> יאלה לסים
                 return 'No permissions', 401
         except NoResultFound:
             return 'No permissions', 401
@@ -239,6 +298,30 @@ def payments():
     except KeyError:
         return "Bad request", 400
 
+<<<<<<< HEAD
+
+# GET all users of a group
+@app.route('/signin', methods=['GET'])
+def usersign():
+    try:
+        try:
+            auth = auth_user(request.form['token'])
+            if 0 == auth.__len__() or Users.query.filter(Users.id == auth['email']).count() == 0 or \
+                    auth['email'] != request.form['email']:
+                return 'No permissions', 401
+        except NoResultFound:
+            return 'No permissions', 401
+        db_session = scoped_session(sessionmaker(bind=engine))
+        email = request.form['email']
+        query = db_session.query(Users).filter(Users.email == email).first()
+        res = user_serializer(query)
+        return json.dumps(res), 200
+    except KeyError:
+        return "Bad request", 400
+
+
+=======
+>>>>>>> יאלה לסים
 if __name__ == "__main__":
     app.run(host="0.0.0.0",
             port=80)

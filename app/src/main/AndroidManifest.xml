@@ -12,7 +12,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.NoActionBar"
         android:usesCleartextTraffic="true">
-        <activity android:name=".GroupOfUserView"></activity>
+        <activity android:name=".GroupInvitatoinDetails"></activity>
+        <activity android:name=".GroupOfUserView" />
         <activity android:name=".OneGroupView" />
         <activity android:name=".GroupView" />
         <activity android:name=".PaymentDetails" />

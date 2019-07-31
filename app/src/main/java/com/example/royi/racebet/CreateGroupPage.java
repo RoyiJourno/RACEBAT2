@@ -77,11 +77,9 @@ public class CreateGroupPage extends AppCompatActivity {
         user = (User)getIntent().getParcelableExtra("user");
 
         btnCreateGroup = findViewById(R.id.btnCreateGroup);
-        btnAddFriend=findViewById(R.id.btnAddFriend);
         txtGroupName=findViewById(R.id.txtGroupName);
         txtBet=findViewById(R.id.txtBetAmount);
         txtDuration=findViewById(R.id.txtDuration);
-        txtPhoneNumber=findViewById(R.id.txtPhoneNumber);
         txtMaxUser=findViewById(R.id.txtMaxUser);
 
 
@@ -101,23 +99,6 @@ public class CreateGroupPage extends AppCompatActivity {
                 intent.putExtra(PaymentActivity.EXTRA_PAYMENT,payPalPayment);
                 intent.putExtra("user",user);
                 startActivityForResult(intent,PalPalResultCode);
-            }
-        });
-
-
-
-
-        btnAddFriend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(txtPhoneNumber.length() != 10) // check if valid phone number
-                {
-                    Toast.makeText(CreateGroupPage.this,"NOT VALID phone number",Toast.LENGTH_LONG).show();
-                }
-                // ** neet to:insert data to sql + declares successful
-
-                Toast.makeText(CreateGroupPage.this,"Member joined!:)",Toast.LENGTH_LONG).show();
-
             }
         });
 
@@ -155,7 +136,7 @@ public class CreateGroupPage extends AppCompatActivity {
 
     private void creatGroup(final User user1) {
         final String uniqueId = UUID.randomUUID().toString().replace("-","");
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://rcbetapi.ddns.net/group",
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, Config.SERVERPATH + "group",
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {

@@ -14,7 +14,7 @@ import static android.content.ContentValues.TAG;
 
 public class CustomGroupsOfUsers  extends BaseAdapter {
 
-    private Context context;
+   private Context context;
 
 
 
@@ -35,11 +35,11 @@ public class CustomGroupsOfUsers  extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return GroupOfUserView.modelArrayList.size();
+        return GroupInvitatoinDetails.modelArrayList.size();
     }
 
     @Override
-    public Object getItem(int position) { return GroupOfUserView.modelArrayList.get(position); }
+    public Object getItem(int position) { return GroupInvitatoinDetails.modelArrayList.get(position); }
 
     @Override
     public long getItemId(int position) {
@@ -73,8 +73,8 @@ public class CustomGroupsOfUsers  extends BaseAdapter {
             holder = (ViewHolder)convertView.getTag();
         }
 
-        holder.nameShowList.setText(GroupOfUserView.modelArrayList.get(position).getFullname());
-        holder.scoreShowList.setText(String.valueOf(GroupOfUserView.modelArrayList.get(position).getScore()));
+        holder.nameShowList.setText(GroupInvitatoinDetails.modelArrayList.get(position).getFullname());
+        holder.scoreShowList.setText(String.valueOf(GroupInvitatoinDetails.modelArrayList.get(position).getScore()));
 
 
         return convertView;

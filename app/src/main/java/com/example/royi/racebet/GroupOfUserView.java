@@ -1,8 +1,12 @@
 package com.example.royi.racebet;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -14,6 +18,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,8 +31,6 @@ public class GroupOfUserView extends AppCompatActivity {
     private User user;
     JSONArray arrayUsers;
     private ListView lv;
-    public static ArrayList<ModelGroupView> modelArrayList;
-    private CustomGroupsOfUsers customAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +51,7 @@ public class GroupOfUserView extends AppCompatActivity {
     }
 
     private void initListGroup() {
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, "http://rcbetapi.ddns.net/groupofusers",
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, Config.SERVERPATH + "groupofusers",
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -95,9 +98,96 @@ public class GroupOfUserView extends AppCompatActivity {
 
     private void initListGroup1() {
         lv = (ListView) findViewById(R.id.listViewInGroup);
-        customAdapter = new CustomGroupsOfUsers(this);
-        modelArrayList = getModel();
-        lv.setAdapter(customAdapter);
+        ArrayList<String> list = new ArrayList<>();
+        for (int i = 0; i < arrayUsers.length(); i++) {
+            try {
+                String groupName = arrayUsers.getJSONObject(i).getString("gname");
+                list.add(groupName);
+            }catch (Exception e){
+
+            }
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1, android.R.id.text1, list);
+        lv.setAdapter(adapter);
+
+
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view,
+                                    final int position, long id) {
+
+                // ListView Clicked item index
+                int itemPosition     = position;
+
+                // ListView Clicked item value
+                String  itemValue    = (String) lv.getItemAtPosition(position);
+
+                // Show Alert
+                Toast.makeText(getApplicationContext(),
+                        "Position :"+itemPosition+"  ListItem : " +itemValue , Toast.LENGTH_LONG)
+                        .show();
+                try {//gid,token,id
+                    final String gid = arrayUsers.getJSONObject(position).getString("gid");
+                    StringRequest stringRequest = new StringRequest(Request.Method.GET, Config.SERVERPATH + "group",
+                            new Response.Listener<String>() {
+                                @Override
+                                public void onResponse(String response) {
+                                    //Toast.makeText(CreateGroupPage.this,response,Toast.LENGTH_LONG).show();
+                                    try{
+                                        JSONObject jsonObject = new JSONObject(response);
+                                        Toast.makeText(getApplicationContext(),jsonObject.toString(),Toast.LENGTH_LONG).show();
+                                        Group group = new Group(jsonObject.getString("gid"),
+                                                jsonObject.getString("gname"),
+                                                jsonObject.getString("duration"),
+                                                jsonObject.getString("maxusers"),
+                                                jsonObject.getString("betprice"),
+                                                jsonObject.getString("adminid"),null);
+                                        Intent intent = new Intent(getApplicationContext(),GroupView.class);
+                                        intent.putExtra("group",group);
+                                        intent.putExtra("user",user);
+                                        startActivity(intent);
+                                    }catch (Exception e){
+                                        Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_LONG).show();
+                                    }
+
+                                }
+                            },
+                            new Response.ErrorListener() {
+                                @Override
+                                public void onErrorResponse(VolleyError error) {
+                                    Toast.makeText(GroupOfUserView.this,error.toString(),Toast.LENGTH_LONG).show();
+                                }
+                            }){/*
+            @Override
+            protected Map<String,String> getParams(){
+                Map<String,String> params = new HashMap<String, String>();
+                params.put("gid",group.getGruopID());
+                params.put("id",user.getUuid());
+                params.put("token",user.getToken());
+
+                return params;
+            }*/
+                        @Override
+                        public Map<String, String> getHeaders() {
+                            Map<String,String> headers = new HashMap<String, String>();
+                            headers.put("id",user.getUuid());
+                            headers.put("token",user.getToken());
+                            headers.put("gid",gid);
+                            return headers;
+                        }
+
+                    };
+
+                    AppController.getInstance(getApplicationContext()).addToRequestQueue(stringRequest);
+
+                }catch (Exception e){
+
+                }
+            }
+
+        });
     }
 
     private ArrayList<ModelGroupView> getModel(){
